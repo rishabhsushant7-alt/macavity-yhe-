@@ -1106,4 +1106,66 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=5000,
         debug=False
-    )
+    )from flask import Flask, render_template_string
+from supabase import create_client
+import os
+
+app = Flask(__name__)
+
+SUPABASE_URL = "https://riolotorwqffbiekspkc.supabase.co"
+SUPABASE_KEY = "sb_publishable_nnGkSCQS1X1HnY-1To1zvQ_f5JtX9p"
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+PAGE = r"""
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MACAVITY YHE</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;background:#05070a;color:#fff;font-family:Arial}
+.app{max-width:650px;min-height:100vh;margin:auto;background:#0c1016}
+.header{padding:15px;background:#111a2a;display:flex;justify-content:space-between;border-bottom:1px solid #333}
+.box{background:#121c2d;margin:12px;padding:12px;border-radius:12px}
+.member{background:#0a1220;padding:10px;margin:6px 0;border-radius:8px;display:flex;justify-content:space-between}
+button{padding:6px 14px;border-radius:20px;border:none;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header"><b>MACAVITY-YHE</b><span id="cnt">0 Members</span></div>
+  <div class="box">
+    <h3>GROUP MEMBERS</h3>
+    <div style="display:flex;gap:8px">
+      <input id="newM" placeholder="Naya member naam" style="flex:1;padding:10px;border-radius:20px;border:none;background:#1a2538;color:#fff">
+      <button onclick="addM()" style="background:#fff;color:#000">+ ADD</button>
+    </div>
+    <div id="list" style="margin-top:12px">Loading...</div>
+  </div>
+</div>
+<script>
+const sb = supabase.createClient("https://riolotorwqffbiekspkc.supabase.co","sb_publishable_nnGkSCQS1X1HnY-1To1zvQ_f5JtX9p")
+async function load(){
+  let {data} = await sb.from('group_members').select('*').order('id',{ascending:true})
+  document.getElementById('cnt').innerText = data.length + " Members"
+  document.getElementById('list').innerHTML = data.map(m=> `<div class="member"><span>👤 ${m.username}</span><button onclick="del(${m.id})" style="background:#ff2d2d;color:#fff">Remove</button></div>`).join('')
+}
+async function addM(){
+  let v=document.getElementById('newM').value; if(!v) return alert("naam likh")
+  await sb.from('group_members').insert([{username:v}]); document.getElementById('newM').value=""; load()
+}
+async function del(id){ await sb.from('group_members').delete().eq('id',id); load() }
+load()
+</script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def home():
+    return render_template_string(PAGE)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
